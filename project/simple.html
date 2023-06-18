@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<link rel="stylesheet" href="chat.css">
+
+<head>
+    <meta charset="utf-8">
+    <title>Chatアプリ</title>
+</head>
+
+<body id="contents">
+
+    <h1>Chatアプリ</h1>
+
+    <!-- コンテンツ表示画面 -->
+    友人にURLを共有してChatを始めよう！
+    <div id="output" style="overflow:auto; height: 300px;"></div>
+
+    <!--/ コンテンツ表示画面 -->
+    <div id="input">
+        <select id="imageSelect">
+            <option value="imgs/buke.png">アイコン1</option>
+            <option value="imgs/caram.png">アイコン2</option>
+            <option value="imgs/tuku.jpg">アイコン3</option>
+        </select>
+        <input type="button" value="選択" onclick="setImage()">
+        <input type="text" id="selectedImage" readonly>
+
+        <div>
+            名前 : <input type="text" id="uname">
+        </div>
+
+        <div>
+            <textarea name="" id="text" cols="200" rows="10"></textarea>
+            <button id="send">送信</button>
+        </div>
+
+        <!-- 高さ制限・スクロール処理 -->
+    </div>
+
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- JQuery -->
+
+    <!--** 以下Firebase **-->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+        import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved }
+            from "https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0Q6BIunx1AqHQ1cWFd6We-cVBWgSIUh4",
+            authDomain: "fir-demo-4c6d2.firebaseapp.com",
+            projectId: "fir-demo-4c6d2",
+            storageBucket: "fir-demo-4c6d2.appspot.com",
+            messagingSenderId: "543263104161",
+            appId: "1:543263104161:web:166d12e445264a584a64e0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // RealDBに接続する
+        const db = getDatabase(app);
+        const dbRef = ref(db, "chat");
+
+        function setImage() {
+            var selectElement = document.getElementById('imageSelect');
+            var selectedImage = selectElement.value;
+            var imageInput = document.getElementById('selectedImage');
+            imageInput.value = selectedImage;
+        }
+
+        // 送信ボタンが押されたらデータをDBに送信
+        $("#send").on("click", function () {
+            // 保存したいデータのオブジェクトを作る
+            const msg = {
+                uname: $("#uname").val(),
+                text: $("#text").val()
+            };
+            console.log(msg)
+            // 新規のデータを送れる状態にする
+            const newPostRef = push(dbRef);
+
+            // DBに値を送信する
+            set(newPostRef, msg);
+        })
+
+        onChildAdded(dbRef, function (data) {
+            const msg = data.val();
+            const key = data.key;
+            const h = `<p id="${key}" class="message">${msg.uname}: ${msg.text}</p>`;
+            $('#output').append(h);
+        })
+
+        $('#output').on('click', function (event) {
+            // クリックされた要素のIDを取得
+            var clickedElementId = event.target.id;
+
+            // アラートを表示して削除可否を確認
+            if (confirm("このメッセージを削除しますか？")) {
+                // どのチャットに対して操作したいのかを指定する（ref）
+                const chatRef = ref(db, "chat/" + clickedElementId);
+
+                // firebaseの中身を削除する
+                remove(chatRef)
+                    .then(function () {
+                        console.log("データが削除されました");
+                    })
+                    .catch(function (error) {
+                        console.error("データの削除に失敗しました", error);
+                    });
+            }
+        });
+
+        onChildRemoved(dbRef, function (snapshot) {
+            const key = snapshot.key;
+            $(`#${key}`).remove();
+        });
+
+    </script>
+
+
+</body>
+
+</html>

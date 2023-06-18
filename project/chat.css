@@ -1,0 +1,18 @@
+#contents{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#output{
+    background-color:ghostwhite;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-bottom: 50px;
+}
+
+#input{
+    width: 100%;
+    margin-left: 50px;
+}
